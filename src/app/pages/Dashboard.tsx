@@ -2,6 +2,7 @@ import { AppShell } from '@/app/components/AppShell';
 import { Battery, Zap, Activity, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Switch } from '@/app/components/ui/switch';
 import { useState, useEffect } from 'react';
+import { endpoints } from '@/app/api';
 
 // Define the shape of our API data
 interface TelemetryData {
@@ -21,8 +22,8 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Use direct URL as requested by user
-        const response = await fetch('http://localhost:5000/api/dashboard');
+        // Use configured endpoint
+        const response = await fetch(endpoints.dashboardLive);
         const data = await response.json();
 
         // Update Live Numbers
@@ -59,7 +60,7 @@ export default function Dashboard() {
 
     // 2. Tell the Server
     try {
-      await fetch('http://localhost:5000/api/control', {
+      await fetch(endpoints.controlRelay, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ inverterRelayOn: checked }),
