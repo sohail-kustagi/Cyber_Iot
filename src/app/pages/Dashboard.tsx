@@ -35,9 +35,9 @@ export default function Dashboard() {
           // Only add if it's new data or every so often? For now, let's just update the "last updated" text
         }
 
-        // Sync Switch State (unless user is interacting, but here we just take server truth)
-        if (data.system && data.system.inverterRelayOn !== undefined) {
-          setInverterMode(data.system.inverterRelayOn);
+        // Sync Switch State
+        if (data.systemState && data.systemState.relayStatus !== undefined) {
+          setInverterMode(data.systemState.relayStatus);
         }
 
         setLastActivity(new Date().toLocaleTimeString());
@@ -63,7 +63,7 @@ export default function Dashboard() {
       await fetch(endpoints.controlRelay, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inverterRelayOn: checked }),
+        body: JSON.stringify({ state: checked }),
       });
 
       // Add to local activity log for feedback
