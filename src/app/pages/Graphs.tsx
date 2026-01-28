@@ -34,7 +34,7 @@ export default function Graphs() {
           const processedData = result.history.reverse().map((item: any) => ({
             time: new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             voltage: item.voltage,
-            current: item.current < 0.5 ? 0.0 : item.current, // Filter noise
+            current: item.current < 0.3 ? 0.0 : item.current, // Filter noise
             batteryLevel: getLiIonCapacity(item.voltage) // Recalculate to ensure consistency
           }));
           setData(processedData);
