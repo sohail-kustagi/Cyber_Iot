@@ -7,7 +7,7 @@ export default function Settings() {
   const [wifiSsid, setWifiSsid] = useState('SolarNode-Network');
   const [wifiPassword, setWifiPassword] = useState('••••••••');
   const [lowVoltageAlarm, setLowVoltageAlarm] = useState([11.0]);
-  const [apiKey] = useState('YOUR_API_KEY_HERE');
+  const [apiKey] = useState('your_api_key_here');
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(apiKey);
