@@ -1,52 +1,46 @@
-const mongoose = require('mongoose');
+// ============================================================
+// POST /api/telemetry (LEGACY ESP32 COMPATIBILITY)
+// ============================================================
+router.post('/telemetry', async (req, res) => {
+    try {
+        // We set a default value of 0 for current if it is missing
+        const { voltage, current = 0 } = req.body;
+        console.log(`[ESP32 Legacy] Received: ${voltage}V, ${current}A`);
 
-/**
- * Telemetry Schema
- * 
- * Stores sensor readings from the ESP32 device.
- * Each document represents a single measurement at a point in time.
- * 
- * Fields:
- * - voltage: Battery voltage reading from the voltage sensor (V)
- * - current: Current draw reading from the current sensor (A)
- * - batteryLevel: Estimated battery percentage (calculated from voltage)
- * - powerSource: Indicates whether system is running on SOLAR or GRID
- * - timestamp: When the reading was taken (auto-generated)
- */
-const telemetrySchema = new mongoose.Schema({
-    voltage: {
-        type: Number,
-        required: true,
-        min: 0,
-        max: 30 // Reasonable max for a 12V system
-    },
-    current: {
-        type: Number,
-        required: true,
-        min: -50, // Negative for discharge
-        max: 50   // Reasonable max for home solar
-    },
-    batteryLevel: {
-        type: Number,
-        required: true,
-        min: 0,
-        max: 100
-    },
-    powerSource: {
-        type: String,
-        enum: ['SOLAR', 'GRID'],
-        required: true
-    },
-    timestamp: {
-        type: Date,
-        default: Date.now,
-        index: true // Index for efficient time-based queries
+        // Validate required fields (Only voltage is strictly required now)
+        if (typeof voltage !== 'number') {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid request. Voltage must be a number.'
+            });
+        }
+
+        // Get current system state
+        const systemState = await getOrCreateSystemState();
+
+        // Calculate derived values
+        const batteryLevel = calculateBatteryLevel(voltage);
+        const powerSource = systemState.relayStatus ? 'SOLAR' : 'GRID';
+
+        // Save telemetry data to database
+        await Telemetry.create({
+            voltage,
+            current,
+            batteryLevel,
+            powerSource
+        });
+
+        // CRITICAL: Return "inverterRelayOn" to match ESP32 expectations
+        res.json({
+            success: true,
+            inverterRelayOn: systemState.relayStatus
+        });
+
+    } catch (error) {
+        console.error('[ESP32 Legacy] Error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to process telemetry data'
+        });
     }
 });
-
-// Create compound index for efficient history queries
-telemetrySchema.index({ timestamp: -1 });
-
-const Telemetry = mongoose.model('Telemetry', telemetrySchema);
-
-module.exports = Telemetry;
